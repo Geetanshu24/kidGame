@@ -1,59 +1,140 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 
-class PastelBackground extends StatefulWidget {
+class MagicalKidsBackground extends StatelessWidget {
   final AnimationController controller;
-  const PastelBackground({super.key, required this.controller});
-
-  @override
-  State<PastelBackground> createState() => _PastelBackgroundState();
-}
-
-class _PastelBackgroundState extends State<PastelBackground> {
-  final List<List<Color>> palettes = [
-    [Color(0xFFFFE4E1), Color(0xFFFFB6C1)], // Light Pink
-    [Color(0xFFFFF9C4), Color(0xFFFFECB3)], // Light Yellow
-    [Color(0xFFB3E5FC), Color(0xFF81D4FA)], // Light Blue
-    [Color(0xFFC8E6C9), Color(0xFFA5D6A7)], // Light Green
-    [Color(0xFFD1C4E9), Color(0xFFB39DDB)], // Light Purple
-    [Color(0xFFFFF0F5), Color(0xFFFFC1E3)], // Soft Lavender Pink
-  ];
-
-  late List<Color> currentColors;
-  late List<Color> nextColors;
-  final Random random = Random();
-
-  @override
-  void initState() {
-    super.initState();
-    currentColors = palettes[random.nextInt(palettes.length)];
-    nextColors = palettes[random.nextInt(palettes.length)];
-    widget.controller.addListener(_updateColors);
-  }
-
-  void _updateColors() {
-    if (widget.controller.isCompleted) {
-      currentColors = nextColors;
-      nextColors = palettes[random.nextInt(palettes.length)];
-      widget.controller.forward(from: 0);
-    }
-  }
+  const MagicalKidsBackground({Key? key, required this.controller})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final rainbowColors = [
+      Colors.redAccent,
+      Colors.orangeAccent,
+      Colors.yellowAccent,
+      Colors.greenAccent,
+      Colors.blueAccent,
+      Colors.indigoAccent,
+      Colors.purpleAccent,
+    ];
+
     return AnimatedBuilder(
-      animation: widget.controller,
-      builder: (context, _) {
+      animation: controller,
+      builder: (_, __) {
+        final width = MediaQuery.of(context).size.width;
+        final height = MediaQuery.of(context).size.height;
+
         return Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Color.lerp(currentColors[0], nextColors[0], widget.controller.value)!,
-                Color.lerp(currentColors[1], nextColors[1], widget.controller.value)!,
+                Color(0xFF81D4FA), // light sky blue
+                Color(0xFF4FC3F7), // deeper sky
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
+          ),
+          child: Stack(
+            children: [
+              // Twinkling stars ✨
+              ...List.generate(40, (i) {
+                final x = (i * 80 + controller.value * width * 0.3) % width;
+                final y = (i * 100 + controller.value * height * 0.4) % height;
+                final twinkle =
+                    0.5 + 0.5 * sin(controller.value * 6 * pi + i);
+
+                return Positioned(
+                  left: x,
+                  top: y,
+                  child: Opacity(
+                    opacity: twinkle,
+                    child: Container(
+                      width: 4,
+                      height: 4,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                );
+              }),
+
+              // Floating rainbow bubbles 🌈
+              ...List.generate(14, (i) {
+                final x = (i * 120 +
+                    sin(controller.value * 2 * pi + i) * 100 +
+                    controller.value * width * 0.5) %
+                    width;
+
+                final y = (height -
+                    ((controller.value * height * 0.9) +
+                        (i * 70) % height)) %
+                    height;
+
+                final scale = 1.0 +
+                    0.4 * sin(controller.value * 2 * pi + i * 0.5);
+
+                return Positioned(
+                  left: x,
+                  top: y,
+                  child: Transform.scale(
+                    scale: scale,
+                    child: Container(
+                      width: 20 + (i % 4) * 5,
+                      height: 20 + (i % 4) * 5,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            rainbowColors[i % rainbowColors.length],
+                            Colors.white,
+                          ],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: rainbowColors[i % rainbowColors.length]
+                                .withOpacity(0.6),
+                            blurRadius: 20,
+                            spreadRadius: 2,
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }),
+
+              // Cartoon clouds ☁️
+              ...List.generate(10, (i) {
+                final x = (controller.value * width * 0.2 + i * 200) % width;
+                final y = 100.0 + (i * 80);
+
+                return Positioned(
+                  left: x,
+                  top: y,
+                  child: Opacity(
+                    opacity: 0.6,
+                    child: Container(
+                      width: 120,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(30),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.white.withOpacity(0.8),
+                            blurRadius: 20,
+                            spreadRadius: 10,
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ],
           ),
         );
       },
