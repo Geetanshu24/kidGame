@@ -6,6 +6,8 @@ void main() {
 }
 
 class MathShootingApp extends StatelessWidget {
+  const MathShootingApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

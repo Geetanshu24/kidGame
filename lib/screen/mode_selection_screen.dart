@@ -1,9 +1,10 @@
-// screens/mode_selection_screen.dart
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'bubble_game_screen.dart';
 
 class ModeSelectionScreen extends StatefulWidget {
+  const ModeSelectionScreen({super.key});
+
   @override
   _ModeSelectionScreenState createState() => _ModeSelectionScreenState();
 }
@@ -176,7 +177,6 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen>
   }
 }
 
-// Bubble animation
 class Bubble {
   double x = Random().nextDouble();
   double y = Random().nextDouble();

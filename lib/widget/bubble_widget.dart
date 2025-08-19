@@ -4,12 +4,14 @@ class BubbleWidget extends StatefulWidget {
   final int value;
   final double size;
   final List<Color> colors;
+  final VoidCallback? onGone;
 
   const BubbleWidget({
     Key? key,
     required this.value,
     required this.size,
     required this.colors,
+    this.onGone,
   }) : super(key: key);
 
   @override
@@ -17,88 +19,89 @@ class BubbleWidget extends StatefulWidget {
 }
 
 class _BubbleWidgetState extends State<BubbleWidget>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _bounce;
+    with TickerProviderStateMixin {
+  late AnimationController _flyCtrl;
+  late AnimationController _spawnCtrl;
+  late Animation<Offset> _flyAnim;
+  bool _flying = false;
 
   @override
   void initState() {
     super.initState();
-    _controller =
-    AnimationController(vsync: this, duration: const Duration(seconds: 2))
-      ..repeat(reverse: true);
-    _bounce = Tween<double>(begin: -2, end: 2)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    _flyCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _flyAnim = Tween<Offset>(
+      begin: Offset.zero,
+      end: const Offset(0, -2), // fly up
+    ).animate(CurvedAnimation(parent: _flyCtrl, curve: Curves.easeIn));
+
+    _flyCtrl.addStatusListener((s) {
+      if (s == AnimationStatus.completed) {
+        widget.onGone?.call();
+      }
+    });
+
+    // spawn animation
+    _spawnCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    )..forward();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _flyCtrl.dispose();
+    _spawnCtrl.dispose();
     super.dispose();
+  }
+
+  void flyAway() {
+    if (!_flying) {
+      setState(() => _flying = true);
+      _flyCtrl.forward();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _bounce,
-      builder: (_, __) {
-        return Transform.translate(
-          offset: Offset(0, _bounce.value),
-          child: Container(
-            width: widget.size,
-            height: widget.size,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: widget.colors,
-                center: Alignment.topLeft,
-                radius: 0.95,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: widget.colors.last.withOpacity(0.5),
-                  blurRadius: 10,
-                  spreadRadius: 1,
-                )
-              ],
-            ),
-            child: Stack(
-              children: [
-                // glossy highlight
-                Positioned(
-                  top: widget.size * 0.15,
-                  left: widget.size * 0.2,
-                  child: Container(
-                    width: widget.size * 0.4,
-                    height: widget.size * 0.25,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.4),
-                      borderRadius: BorderRadius.circular(widget.size),
-                    ),
-                  ),
-                ),
-                // number
-                Center(
-                  child: Text(
-                    '${widget.value}',
-                    style: TextStyle(
-                      fontSize: widget.size * 0.4,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      shadows: [
-                        Shadow(
-                            color: Colors.black26,
-                            blurRadius: 4,
-                            offset: Offset(1, 1))
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+    final bubble = ScaleTransition(
+      scale: CurvedAnimation(parent: _spawnCtrl, curve: Curves.elasticOut),
+      child: Container(
+        width: widget.size,
+        height: widget.size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(
+            colors: widget.colors,
+            center: Alignment.topLeft,
+            radius: 0.95,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: widget.colors.last.withOpacity(0.4),
+              blurRadius: 12,
+              spreadRadius: 2,
+            )
+          ],
+        ),
+        child: Center(
+          child: Text(
+            '${widget.value}',
+            style: TextStyle(
+              fontSize: widget.size * 0.38,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
+
+    return _flying
+        ? SlideTransition(position: _flyAnim, child: bubble)
+        : bubble;
   }
 }
+
