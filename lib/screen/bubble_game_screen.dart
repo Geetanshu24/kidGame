@@ -1,7 +1,16 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:kid_game/screen/pastal_background.dart';
+import 'package:kid_game/background/beach.dart';
+import 'package:kid_game/background/carnival.dart';
+import 'package:kid_game/background/cloud_sky.dart';
+import 'package:kid_game/background/forest.dart';
+import 'package:kid_game/background/magical_kid.dart';
+import 'package:kid_game/background/ocean_wave_background.dart';
+import 'package:kid_game/background/rainbow.dart';
+import 'package:kid_game/background/space_galaxy.dart';
+import 'package:kid_game/background/staryy_night.dart';
+import 'package:kid_game/background/volcano_fire.dart';
 import 'package:kid_game/widget/bubble_widget.dart';
 import 'package:kid_game/widget/canon_painter.dart';
 import 'package:kid_game/widget/particle_painter.dart';
@@ -11,7 +20,10 @@ import '../utils/math_game_logic.dart';
 
 class ArcadeBubbleGameScreen extends StatefulWidget {
   final String mode;
-  const ArcadeBubbleGameScreen({super.key, this.mode = 'Addition'});
+  final int minNumber;
+  final int maxNumber;
+  const ArcadeBubbleGameScreen({super.key, this.mode = 'Addition',this.minNumber = 1,
+    this.maxNumber = 10,});
 
   @override
   State<ArcadeBubbleGameScreen> createState() =>
@@ -53,7 +65,11 @@ class _ArcadeBubbleGameScreenState extends State<ArcadeBubbleGameScreen>
   @override
   void initState() {
     super.initState();
-    logic = MathGameLogic(mode: widget.mode);
+    logic = MathGameLogic(
+      mode: widget.mode,
+      min: widget.minNumber,
+      max: widget.maxNumber,
+    );
 
     recoilController =
         AnimationController(vsync: this, duration: const Duration(milliseconds: 180));
@@ -291,7 +307,8 @@ class _ArcadeBubbleGameScreenState extends State<ArcadeBubbleGameScreen>
       backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          MagicalKidsBackground(controller: bgController),
+          _getBackground(),
+          // MagicalKidsBackground(controller: bgController),
           Positioned(top: 36, left: 16, right: 16, child: _hudCard()),
 
           // Bubbles
@@ -428,5 +445,34 @@ class _ArcadeBubbleGameScreenState extends State<ArcadeBubbleGameScreen>
         ),
       ],
     );
+  }
+  Widget _getBackground() {
+
+    int bgIndex = ((logic.score ~/ 10) );
+
+    switch (bgIndex) {
+      case 0:
+        return MagicalKids1Background(controller: bgController);
+      case 1:
+        return SpaceGalaxyBackground(controller: bgController);
+      case 2:
+        return CloudySkyBackground(controller: bgController);
+      case 3:
+        return RainbowBackground(controller: bgController);
+      case 4:
+        return ForestBackground(controller: bgController);
+      case 5:
+        return StarryNightBackground(controller: bgController);
+      case 6:
+        return VolcanoFireBackground(controller: bgController);
+      case 7:
+        return OceanWaveBackground(controller: bgController);
+      case 8:
+        return BeachBackground(controller: bgController);
+      case 9:
+        return CarnivalBackground(controller: bgController);
+      default:
+        return MagicalKids1Background(controller: bgController);
+    }
   }
 }

@@ -18,6 +18,18 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen>
     {"name": "Division", "emoji": "➗", "colors": [Colors.greenAccent, Colors.teal]},
   ];
 
+  final List<String> classes = [
+    "Nursery",
+    "KG",
+    "Class 1",
+    "Class 2",
+    "Class 3",
+    "Class 4",
+    "Class 5",
+  ];
+
+  String? selectedClass;
+
   late AnimationController _controller;
   late List<Bubble> bubbles;
 
@@ -32,6 +44,27 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen>
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  /// 🎯 Function to get difficulty range according to class
+  Map<String, dynamic> getDifficulty(String className) {
+    switch (className) {
+      case "Nursery":
+      case "KG":
+        return {"min": 1, "max": 5, "operations": ["Addition"]};
+      case "Class 1":
+        return {"min": 1, "max": 10, "operations": ["Addition", "Subtraction"]};
+      case "Class 2":
+        return {"min": 1, "max": 20, "operations": ["Addition", "Subtraction"]};
+      case "Class 3":
+        return {"min": 1, "max": 50, "operations": ["Addition", "Subtraction", "Multiplication"]};
+      case "Class 4":
+        return {"min": 1, "max": 100, "operations": ["Addition", "Subtraction", "Multiplication", "Division"]};
+      case "Class 5":
+        return {"min": 1, "max": 200, "operations": ["Addition", "Subtraction", "Multiplication", "Division"]};
+      default:
+        return {"min": 1, "max": 10, "operations": ["Addition"]};
+    }
   }
 
   @override
@@ -56,23 +89,40 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen>
               children: [
                 SizedBox(height: 20),
                 Text(
-                  "🎈 Pick Your Math Adventure 🎠",
+                  "🎓 Choose Your Class & Math Adventure 🎠",
                   style: TextStyle(
-                    fontSize: 32,
+                    fontSize: 28,
                     fontWeight: FontWeight.bold,
                     color: Colors.pink.shade800,
                     fontFamily: 'ComicSans',
-                    shadows: [
-                      Shadow(
-                        blurRadius: 4,
-                        color: Colors.white,
-                        offset: Offset(2, 2),
-                      )
-                    ],
                   ),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 30),
+                SizedBox(height: 20),
+
+                // 🔹 Class dropdown
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: DropdownButtonFormField<String>(
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      labelText: "Select Class",
+                    ),
+                    value: selectedClass,
+                    items: classes.map((cls) {
+                      return DropdownMenuItem(
+                        value: cls,
+                        child: Text(cls),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      setState(() {
+                        selectedClass = val;
+                      });
+                    },
+                  ),
+                ),
+                SizedBox(height: 20),
 
                 Expanded(
                   child: Padding(
@@ -87,82 +137,73 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen>
                       itemCount: modes.length,
                       itemBuilder: (context, index) {
                         final mode = modes[index];
-                        return TweenAnimationBuilder<double>(
-                          tween: Tween(begin: 1, end: 1),
-                          duration: Duration(milliseconds: 200),
-                          builder: (context, scale, child) {
-                            return GestureDetector(
-                              onTapDown: (_) {
-                                setState(() => scale = 0.95);
-                              },
-                              onTapUp: (_) {
-                                setState(() => scale = 1);
-                              },
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => ArcadeBubbleGameScreen(mode: mode["name"]),
-                                  ),
-                                );
-                              },
-                              child: Transform.scale(
-                                scale: scale,
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: mode["colors"],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                    borderRadius: BorderRadius.circular(10.0),
-                                    shape: BoxShape.rectangle, // playful round shape
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: mode["colors"][1].withOpacity(0.6),
-                                        blurRadius: 20,
-                                        spreadRadius: 2,
-                                        offset: Offset(0, 8),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        mode["emoji"],
-                                        style: TextStyle(
-                                          fontSize: 60,
-                                          shadows: [
-                                            Shadow(
-                                              blurRadius: 10,
-                                              color: Colors.white,
-                                            )
-                                          ],
-                                        ),
-                                      ),
-                                      SizedBox(height: 10),
-                                      Text(
-                                        mode["name"],
-                                        style: TextStyle(
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                          fontFamily: 'ComicSans',
-                                          shadows: [
-                                            Shadow(
-                                              blurRadius: 8,
-                                              color: Colors.black45,
-                                            )
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                        return GestureDetector(
+                          onTap: () {
+                            if (selectedClass == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("Please select class first!")),
+                              );
+                              return;
+                            }
+
+                            final difficulty = getDifficulty(selectedClass!);
+
+                            // Check if mode is allowed for this class
+                            if (!difficulty["operations"].contains(mode["name"])) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("${mode["name"]} not available for $selectedClass")),
+                              );
+                              return;
+                            }
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ArcadeBubbleGameScreen(
+                                  mode: mode["name"],
+                                  minNumber: difficulty["min"],
+                                  maxNumber: difficulty["max"],
                                 ),
                               ),
                             );
                           },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: mode["colors"],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(15),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: mode["colors"][1].withOpacity(0.6),
+                                  blurRadius: 20,
+                                  spreadRadius: 2,
+                                  offset: Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  mode["emoji"],
+                                  style: TextStyle(fontSize: 60),
+                                ),
+                                SizedBox(height: 10),
+                                Text(
+                                  mode["name"],
+                                  style: TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    fontFamily: 'ComicSans',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         );
                       },
                     ),
