@@ -22,12 +22,15 @@ class ArcadeBubbleGameScreen extends StatefulWidget {
   final String mode;
   final int minNumber;
   final int maxNumber;
-  const ArcadeBubbleGameScreen({super.key, this.mode = 'Addition',this.minNumber = 1,
-    this.maxNumber = 10,});
+  const ArcadeBubbleGameScreen({
+    super.key,
+    this.mode = 'Addition',
+    this.minNumber = 1,
+    this.maxNumber = 10,
+  });
 
   @override
-  State<ArcadeBubbleGameScreen> createState() =>
-      _ArcadeBubbleGameScreenState();
+  State<ArcadeBubbleGameScreen> createState() => _ArcadeBubbleGameScreenState();
 }
 
 class _ArcadeBubbleGameScreenState extends State<ArcadeBubbleGameScreen>
@@ -182,7 +185,6 @@ class _ArcadeBubbleGameScreenState extends State<ArcadeBubbleGameScreen>
     }
   }
 
-
   void _flyBubbleAway(int idx) {
     final controller = AnimationController(
       vsync: this,
@@ -198,7 +200,6 @@ class _ArcadeBubbleGameScreenState extends State<ArcadeBubbleGameScreen>
       setState(() {
         for (int i = 0; i < bubbleValues.length; i++) {
           if (i == idx) {
-            // udaan waale ko replace karo fresh value se
             bubbleValues[i] = answers[i];
             bubbleColors[i] = _randomGradient();
           } else {
@@ -243,7 +244,6 @@ class _ArcadeBubbleGameScreenState extends State<ArcadeBubbleGameScreen>
 
     controller.forward().then((_) => controller.dispose());
   }
-
 
   void _spawnParticles(Offset center, List<Color> colors) {
     final int count = 18 + _r.nextInt(8);
@@ -307,9 +307,53 @@ class _ArcadeBubbleGameScreenState extends State<ArcadeBubbleGameScreen>
       backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          _getBackground(),
-          // MagicalKidsBackground(controller: bgController),
-          Positioned(top: 36, left: 16, right: 16, child: _hudCard()),
+          /// ✅ Smooth Background Transition
+      AnimatedSwitcher(
+      duration: const Duration(milliseconds: 2200), // ⏳ slow transition (2.2s)
+      layoutBuilder: (Widget? currentChild, List<Widget> previousChildren) {
+        return Stack(
+          children: <Widget>[
+            ...previousChildren,
+            if (currentChild != null) currentChild,
+          ],
+        );
+      },
+      transitionBuilder: (Widget child, Animation<double> animation) {
+        final isNew = child.key == ValueKey(logic.score ~/ 10);
+
+        if (isNew) {
+          // ✅ New background enters from bottom → center
+          final inAnimation = Tween<Offset>(
+            begin: const Offset(0, 1),
+            end: Offset.zero,
+          ).animate(
+            CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeInOutCubic, // smooth slow in & out
+            ),
+          );
+
+          return SlideTransition(position: inAnimation, child: child);
+        } else {
+          // ✅ Old background exits upward
+          final outAnimation = Tween<Offset>(
+            begin: Offset.zero,
+            end: const Offset(0, -1),
+          ).animate(
+            CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeInOutCubic, // smooth exit
+            ),
+          );
+
+          return SlideTransition(position: outAnimation, child: child);
+        }
+      },
+      child: _getBackground(),
+    ),
+
+
+    Positioned(top: 36, left: 16, right: 16, child: _hudCard()),
 
           // Bubbles
           ...List.generate(bubblePositions.length, (i) {
@@ -446,33 +490,43 @@ class _ArcadeBubbleGameScreenState extends State<ArcadeBubbleGameScreen>
       ],
     );
   }
+
   Widget _getBackground() {
-
-    int bgIndex = ((logic.score ~/ 10) );
-
+    int bgIndex = (logic.score ~/ 10);
     switch (bgIndex) {
       case 0:
-        return MagicalKids1Background(controller: bgController);
+        return MagicalKids1Background(
+            key: ValueKey(0), controller: bgController);
       case 1:
-        return SpaceGalaxyBackground(controller: bgController);
+        return SpaceGalaxyBackground(
+            key: ValueKey(1), controller: bgController);
       case 2:
-        return CloudySkyBackground(controller: bgController);
+        return CloudySkyBackground(
+            key: ValueKey(2), controller: bgController);
       case 3:
-        return RainbowBackground(controller: bgController);
+        return RainbowBackground(
+            key: ValueKey(3), controller: bgController);
       case 4:
-        return ForestBackground(controller: bgController);
+        return ForestBackground(
+            key: ValueKey(4), controller: bgController);
       case 5:
-        return StarryNightBackground(controller: bgController);
+        return StarryNightBackground(
+            key: ValueKey(5), controller: bgController);
       case 6:
-        return VolcanoFireBackground(controller: bgController);
+        return VolcanoFireBackground(
+            key: ValueKey(6), controller: bgController);
       case 7:
-        return OceanWaveBackground(controller: bgController);
+        return OceanWaveBackground(
+            key: ValueKey(7), controller: bgController);
       case 8:
-        return BeachBackground(controller: bgController);
+        return BeachBackground(
+            key: ValueKey(8), controller: bgController);
       case 9:
-        return CarnivalBackground(controller: bgController);
+        return CarnivalBackground(
+            key: ValueKey(9), controller: bgController);
       default:
-        return MagicalKids1Background(controller: bgController);
+        return MagicalKids1Background(
+            key: ValueKey(999), controller: bgController);
     }
   }
 }
