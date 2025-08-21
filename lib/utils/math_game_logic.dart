@@ -95,10 +95,6 @@ class MathGameLogic {
       score += 10;
       level++;
 
-      // 🎯 Har 5 level pe cannon nayi jagah smoothly jayega
-      if (level % 2 == 0) {
-        cannonY = 0.2 + _r.nextDouble() * 0.6; // random 0.2–0.8
-      }
 
       return true;
     }

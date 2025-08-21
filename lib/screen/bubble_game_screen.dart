@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:kid_game/background/beach.dart';
 import 'package:kid_game/background/carnival.dart';
@@ -65,9 +66,18 @@ class _ArcadeBubbleGameScreenState extends State<ArcadeBubbleGameScreen>
   late AnimationController recoilController;
   late AnimationController bgController;
 
+  late AudioPlayer bgPlayer;
+  late AudioPlayer sfxPlayer;
+
+  // ✅ Track current background index
+  int currentBgIndex = 1;
+
   @override
   void initState() {
     super.initState();
+    bgPlayer = AudioPlayer();
+    sfxPlayer = AudioPlayer();
+
     logic = MathGameLogic(
       mode: widget.mode,
       min: widget.minNumber,
@@ -84,6 +94,12 @@ class _ArcadeBubbleGameScreenState extends State<ArcadeBubbleGameScreen>
       _setupStaticBubbles();
       startGameLoop();
     });
+
+    // loop background music
+    playBgMusic();
+
+    // start me ek background set
+    _updateBackground();
   }
 
   List<Color> _randomGradient() {
@@ -122,6 +138,21 @@ class _ArcadeBubbleGameScreenState extends State<ArcadeBubbleGameScreen>
     }
 
     setState(() {});
+  }
+
+  Future<void> playBgMusic() async {
+    await bgPlayer.setVolume(0); // start muted
+    await bgPlayer.setReleaseMode(ReleaseMode.loop);
+    await bgPlayer.play(AssetSource('audio/background_sound.mp3'));
+
+    // fade-in effect
+    double vol = 0;
+    while (vol < 0.2) {
+      vol += 0.02;
+      if (vol > 0.2) vol = 0.2;
+      await bgPlayer.setVolume(vol);
+      await Future.delayed(const Duration(milliseconds: 150));
+    }
   }
 
   void startGameLoop() {
@@ -168,11 +199,19 @@ class _ArcadeBubbleGameScreenState extends State<ArcadeBubbleGameScreen>
 
     if (correct) {
       combo++;
+
+      // 🔊 Play level up sound on every win
+      _playLevelUpSound();
+
       _spawnParticles(bubblePositions[idx], bubbleColors[idx]);
-      _flyBubbleAway(idx); // ✅ sirf correct bubble udega
+      _flyBubbleAway(idx);
+
+      // ✅ background change only after every 5 wins
+      if ((logic.score ~/ 10) % 5 == 0) {
+        _updateBackground();
+      }
     } else {
       combo = 0;
-      // ❌ wrong bubble blink kare
       final old = bubbleColors[idx];
       bubbleColors[idx] = [Colors.grey, Colors.black];
       Timer(const Duration(milliseconds: 350), () {
@@ -185,6 +224,25 @@ class _ArcadeBubbleGameScreenState extends State<ArcadeBubbleGameScreen>
     }
   }
 
+  void _updateBackground() {
+    setState(() {
+      currentBgIndex = (currentBgIndex % 9) + 1;
+    });
+  }
+
+
+  void _playLevelUpSound() {
+    final player = AudioPlayer(); // fresh instance
+    player.play(AssetSource('audio/level_up.mp3')).catchError((e) {
+      print("❌ Error playing sound: $e");
+    });
+
+    // optional: dispose after done
+    player.onPlayerComplete.listen((_) {
+      player.dispose();
+    });
+  }
+
   void _flyBubbleAway(int idx) {
     final controller = AnimationController(
       vsync: this,
@@ -193,7 +251,6 @@ class _ArcadeBubbleGameScreenState extends State<ArcadeBubbleGameScreen>
 
     bubbleFlyControllers[idx] = controller;
     controller.forward().then((_) {
-      // ✅ jab correct bubble gaya, new question generate
       logic.generateQuestion();
       final answers = logic.answers;
 
@@ -224,7 +281,7 @@ class _ArcadeBubbleGameScreenState extends State<ArcadeBubbleGameScreen>
 
     final animation = CurvedAnimation(
       parent: controller,
-      curve: Curves.elasticOut, // 🎯 sling effect
+      curve: Curves.elasticOut,
     );
 
     controller.addListener(() {
@@ -295,6 +352,8 @@ class _ArcadeBubbleGameScreenState extends State<ArcadeBubbleGameScreen>
     for (var c in bubbleFlyControllers) {
       c?.dispose();
     }
+    bgPlayer.dispose();
+    sfxPlayer.dispose();
     super.dispose();
   }
 
@@ -307,53 +366,46 @@ class _ArcadeBubbleGameScreenState extends State<ArcadeBubbleGameScreen>
       backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          /// ✅ Smooth Background Transition
-      AnimatedSwitcher(
-      duration: const Duration(milliseconds: 2200), // ⏳ slow transition (2.2s)
-      layoutBuilder: (Widget? currentChild, List<Widget> previousChildren) {
-        return Stack(
-          children: <Widget>[
-            ...previousChildren,
-            if (currentChild != null) currentChild,
-          ],
-        );
-      },
-      transitionBuilder: (Widget child, Animation<double> animation) {
-        final isNew = child.key == ValueKey(logic.score ~/ 10);
+          /// ✅ Smooth Background Transition (only when bg changes)
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 2200),
+            layoutBuilder:
+                (Widget? currentChild, List<Widget> previousChildren) {
+              return Stack(
+                children: <Widget>[
+                  ...previousChildren,
+                  if (currentChild != null) currentChild,
+                ],
+              );
+            },
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              final inAnimation = Tween<Offset>(
+                begin: const Offset(0, 1),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeInOutCubic,
+              ));
 
-        if (isNew) {
-          // ✅ New background enters from bottom → center
-          final inAnimation = Tween<Offset>(
-            begin: const Offset(0, 1),
-            end: Offset.zero,
-          ).animate(
-            CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeInOutCubic, // smooth slow in & out
-            ),
-          );
+              final outAnimation = Tween<Offset>(
+                begin: Offset.zero,
+                end: const Offset(0, -1),
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeInOutCubic,
+              ));
 
-          return SlideTransition(position: inAnimation, child: child);
-        } else {
-          // ✅ Old background exits upward
-          final outAnimation = Tween<Offset>(
-            begin: Offset.zero,
-            end: const Offset(0, -1),
-          ).animate(
-            CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeInOutCubic, // smooth exit
-            ),
-          );
+              return SlideTransition(
+                position: child.key == ValueKey(currentBgIndex)
+                    ? inAnimation
+                    : outAnimation,
+                child: child,
+              );
+            },
+            child: _getBackgroundWidget(),
+          ),
 
-          return SlideTransition(position: outAnimation, child: child);
-        }
-      },
-      child: _getBackground(),
-    ),
-
-
-    Positioned(top: 36, left: 16, right: 16, child: _hudCard()),
+          Positioned(top: 36, left: 16, right: 16, child: _hudCard()),
 
           // Bubbles
           ...List.generate(bubblePositions.length, (i) {
@@ -491,42 +543,38 @@ class _ArcadeBubbleGameScreenState extends State<ArcadeBubbleGameScreen>
     );
   }
 
-  Widget _getBackground() {
-    int bgIndex = (logic.score ~/ 10);
-    switch (bgIndex) {
-      case 0:
-        return MagicalKids1Background(
-            key: ValueKey(0), controller: bgController);
+  Widget _getBackgroundWidget() {
+    switch (currentBgIndex) {
       case 1:
-        return SpaceGalaxyBackground(
+        return MagicalKids1Background(
             key: ValueKey(1), controller: bgController);
       case 2:
-        return CloudySkyBackground(
+        return SpaceGalaxyBackground(
             key: ValueKey(2), controller: bgController);
       case 3:
-        return RainbowBackground(
+        return CloudySkyBackground(
             key: ValueKey(3), controller: bgController);
       case 4:
-        return ForestBackground(
+        return RainbowBackground(
             key: ValueKey(4), controller: bgController);
       case 5:
-        return StarryNightBackground(
+        return ForestBackground(
             key: ValueKey(5), controller: bgController);
       case 6:
-        return VolcanoFireBackground(
+        return StarryNightBackground(
             key: ValueKey(6), controller: bgController);
       case 7:
-        return OceanWaveBackground(
+        return VolcanoFireBackground(
             key: ValueKey(7), controller: bgController);
       case 8:
-        return BeachBackground(
+        return OceanWaveBackground(
             key: ValueKey(8), controller: bgController);
       case 9:
-        return CarnivalBackground(
+        return BeachBackground(
             key: ValueKey(9), controller: bgController);
       default:
-        return MagicalKids1Background(
-            key: ValueKey(999), controller: bgController);
+        return CarnivalBackground(
+            key: ValueKey(0), controller: bgController);
     }
   }
 }
