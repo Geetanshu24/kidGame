@@ -19,8 +19,6 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen>
   ];
 
   final List<String> classes = [
-    "Nursery",
-    "KG",
     "Class 1",
     "Class 2",
     "Class 3",
@@ -49,19 +47,16 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen>
   /// 🎯 Function to get difficulty range according to class
   Map<String, dynamic> getDifficulty(String className) {
     switch (className) {
-      case "Nursery":
-      case "KG":
-        return {"min": 1, "max": 5, "operations": ["Addition"]};
       case "Class 1":
-        return {"min": 1, "max": 10, "operations": ["Addition", "Subtraction"]};
+        return {"min": 1, "max": 5};
       case "Class 2":
-        return {"min": 1, "max": 20, "operations": ["Addition", "Subtraction"]};
+        return {"min": 1, "max": 10};
       case "Class 3":
-        return {"min": 1, "max": 50, "operations": ["Addition", "Subtraction", "Multiplication"]};
+        return {"min": 1, "max": 20};
       case "Class 4":
-        return {"min": 1, "max": 100, "operations": ["Addition", "Subtraction", "Multiplication", "Division"]};
+        return {"min": 1, "max": 100};
       case "Class 5":
-        return {"min": 1, "max": 200, "operations": ["Addition", "Subtraction", "Multiplication", "Division"]};
+        return {"min": 1, "max": 200};
       default:
         return {"min": 1, "max": 10, "operations": ["Addition"]};
     }
@@ -147,14 +142,6 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen>
                             }
 
                             final difficulty = getDifficulty(selectedClass!);
-
-                            // Check if mode is allowed for this class
-                            if (!difficulty["operations"].contains(mode["name"])) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("${mode["name"]} not available for $selectedClass")),
-                              );
-                              return;
-                            }
 
                             Navigator.push(
                               context,

@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 class BubbleWidget extends StatefulWidget {
   final int value;
   final double size;
-  final List<Color> colors;
+  final List<Color>? colors;
   final VoidCallback? onGone;
 
   const BubbleWidget({
     Key? key,
     required this.value,
     required this.size,
-    required this.colors,
+    this.colors,
     this.onGone,
   }) : super(key: key);
 
@@ -66,6 +66,12 @@ class _BubbleWidgetState extends State<BubbleWidget>
 
   @override
   Widget build(BuildContext context) {
+    // 🎨 Default soft, kid-friendly pastel palette
+    final defaultColors = [
+      Colors.pink.shade200,
+      Colors.purple.shade100,
+    ];
+
     final bubble = ScaleTransition(
       scale: CurvedAnimation(parent: _spawnCtrl, curve: Curves.elasticOut),
       child: Container(
@@ -74,15 +80,15 @@ class _BubbleWidgetState extends State<BubbleWidget>
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: RadialGradient(
-            colors: widget.colors,
+            colors: widget.colors ?? defaultColors,
             center: Alignment.topLeft,
-            radius: 0.95,
+            radius: 0.9,
           ),
           boxShadow: [
             BoxShadow(
-              color: widget.colors.last.withOpacity(0.4),
-              blurRadius: 12,
-              spreadRadius: 2,
+              color: (widget.colors ?? defaultColors).last.withOpacity(0.25),
+              blurRadius: 8,
+              spreadRadius: 1,
             )
           ],
         ),
@@ -90,9 +96,16 @@ class _BubbleWidgetState extends State<BubbleWidget>
           child: Text(
             '${widget.value}',
             style: TextStyle(
-              fontSize: widget.size * 0.38,
+              fontSize: widget.size * 0.36,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: Colors.black87, // softer text (not pure white)
+              shadows: const [
+                Shadow(
+                  blurRadius: 2,
+                  offset: Offset(1, 1),
+                  color: Colors.white30,
+                ),
+              ],
             ),
           ),
         ),
@@ -104,4 +117,3 @@ class _BubbleWidgetState extends State<BubbleWidget>
         : bubble;
   }
 }
-

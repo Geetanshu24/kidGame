@@ -14,6 +14,7 @@ import 'package:kid_game/background/staryy_night.dart';
 import 'package:kid_game/background/volcano_fire.dart';
 import 'package:kid_game/widget/bubble_widget.dart';
 import 'package:kid_game/widget/canon_painter.dart';
+import 'package:kid_game/widget/game_card.dart';
 import 'package:kid_game/widget/particle_painter.dart';
 
 import '../model/particles.dart';
@@ -405,7 +406,7 @@ class _ArcadeBubbleGameScreenState extends State<ArcadeBubbleGameScreen>
             child: _getBackgroundWidget(),
           ),
 
-          Positioned(top: 36, left: 16, right: 16, child: _hudCard()),
+          Positioned(top: 36, left: 16, right: 16, child: GameHud(level:  logic.level,question:logic.question ,score:  logic.score,)),
 
           // Bubbles
           ...List.generate(bubblePositions.length, (i) {
@@ -492,73 +493,23 @@ class _ArcadeBubbleGameScreenState extends State<ArcadeBubbleGameScreen>
     );
   }
 
-  Widget _hudCard() {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(colors: [Colors.yellowAccent, Colors.orangeAccent]),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 6)],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('⭐ Score: ${logic.score}',
-                  style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.deepPurple,
-                      fontFamily: 'ComicNeue')),
-              SizedBox(height: 4),
-              Text('🔥 Combo: x$combo  🚀 Level: $level',
-                  style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.redAccent,
-                      fontFamily: 'ComicNeue')),
-            ],
-          ),
-        ),
-        Spacer(),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(colors: [Colors.pinkAccent, Colors.purpleAccent]),
-            borderRadius: BorderRadius.circular(25),
-            boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 8)],
-          ),
-          child: Text(
-            logic.question,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              fontFamily: 'Baloo2',
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _getBackgroundWidget() {
     switch (currentBgIndex) {
       case 1:
-        return MagicalKids1Background(
+        return OceanWaveBackground(
             key: ValueKey(1), controller: bgController);
       case 2:
         return SpaceGalaxyBackground(
             key: ValueKey(2), controller: bgController);
       case 3:
-        return CloudySkyBackground(
+        return ForestBackground(
             key: ValueKey(3), controller: bgController);
       case 4:
         return RainbowBackground(
             key: ValueKey(4), controller: bgController);
       case 5:
-        return ForestBackground(
+        return CloudySkyBackground(
             key: ValueKey(5), controller: bgController);
       case 6:
         return StarryNightBackground(
@@ -567,7 +518,7 @@ class _ArcadeBubbleGameScreenState extends State<ArcadeBubbleGameScreen>
         return VolcanoFireBackground(
             key: ValueKey(7), controller: bgController);
       case 8:
-        return OceanWaveBackground(
+        return MagicalKids1Background(
             key: ValueKey(8), controller: bgController);
       case 9:
         return BeachBackground(
