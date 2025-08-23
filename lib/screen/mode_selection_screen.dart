@@ -96,27 +96,76 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen>
                 SizedBox(height: 20),
 
                 // 🔹 Class dropdown
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: DropdownButtonFormField<String>(
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      labelText: "Select Class",
-                    ),
-                    value: selectedClass,
-                    items: classes.map((cls) {
-                      return DropdownMenuItem(
-                        value: cls,
-                        child: Text(cls),
+                // 🔹 Class selection row
+                SizedBox(
+                  height: 105,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: classes.length,
+                    itemBuilder: (context, index) {
+                      final cls = classes[index];
+                      final isSelected = selectedClass == cls;
+
+                      // 🎨 Fun emojis for kids
+                      final classEmojis = ["🎈", "🚀", "🦄", "🌈", "🐼"];
+                      final emoji = classEmojis[index % classEmojis.length];
+
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            selectedClass = cls;
+                          });
+                        },
+                        child: AnimatedContainer(
+                          duration: Duration(milliseconds: 300),
+                          margin: EdgeInsets.symmetric(horizontal: 8),
+                          padding: EdgeInsets.all(16),
+                          width: 120,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: isSelected
+                                  ? [Colors.pinkAccent, Colors.orangeAccent]
+                                  : [Colors.blueAccent, Colors.lightBlueAccent],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              if (isSelected)
+                                BoxShadow(
+                                  color: Colors.pinkAccent.withOpacity(0.6),
+                                  blurRadius: 15,
+                                  spreadRadius: 2,
+                                  offset: Offset(0, 5),
+                                ),
+                            ],
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                emoji,
+                                style: TextStyle(fontSize: 28),
+                              ),
+                              SizedBox(height: 5),
+                              Text(
+                                cls,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  fontFamily: 'ComicSans',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       );
-                    }).toList(),
-                    onChanged: (val) {
-                      setState(() {
-                        selectedClass = val;
-                      });
                     },
                   ),
                 ),
+
                 SizedBox(height: 20),
 
                 Expanded(
